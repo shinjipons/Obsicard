@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Obsidian Link Power-Up</title>
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+</head>
+<body>
+  <script>
+    // Initialize the Power-Up with attachment-sections capability
+    var powerUpConfig = {};
+
+    // Only add attachment-sections if it's available
+    // This helps avoid the capability error
+    powerUpConfig['attachment-sections'] = function(t, options) {
+        // Add comprehensive debugging
+        console.log('=== attachment-sections called ===');
+        console.log('Full options object:', JSON.stringify(options, null, 2));
+        console.log('options.entries:', options.entries);
+        console.log('options.entries type:', typeof options.entries);
+        console.log('options.entries length:', options.entries ? options.entries.length : 'undefined');
+
+        // Get entries from options - this is the standard way for attachment-sections
+        var entries = options.entries || [];
+        console.log('Entries array:', entries);
+        console.log('Number of entries:', entries.length);
+
+        // Log each entry for detailed debugging
+        if (entries && entries.length > 0) {
+          entries.forEach(function(entry, index) {
+            console.log('Entry ' + index + ':', {
+              url: entry.url,
+              name: entry.name,
+              type: entry.type,
+              fullEntry: entry
+            });
+          });
+        } else {
+          console.log('No entries found in options.entries');
+        }
+
+        // Filter attachments that are Obsidian URLs
+        var obsidianEntries = entries.filter(function(entry) {
+          var url = entry.url || '';
+          var isObsidian = url.startsWith('obsidian://');
+          console.log('Checking entry URL:', url, 'isObsidian:', isObsidian);
+          return isObsidian;
+        });
+
+        console.log('Obsidian entries found:', obsidianEntries.length);
+
+        // If no Obsidian attachments, return empty array
+        if (obsidianEntries.length === 0) {
+          console.log('No Obsidian URLs found, returning empty array');
+          return [];
+        }
+
+        // Return sections for each Obsidian attachment
+        var sections = obsidianEntries.map(function(entry) {
+          console.log('Creating section for:', entry.url);
+          var section = {
+            claimed: [entry.url],
+            icon: './icon.svg',
+            title: 'Open in Obsidian',
+            content: {
+              type: 'iframe',
+              url: t.signUrl('./attachment-section.html', {
+                url: entry.url,
+                name: entry.name || 'Obsidian Note'
+              }),
+              height: 100
+            }
+          };
+          console.log('Section created:', JSON.stringify(section, null, 2));
+          return section;
+        });
+
+        console.log('Returning', sections.length, 'sections');
+        return sections;
+      };
+
+    // Add card-back-section capability for paste functionality
+    powerUpConfig['card-back-section'] = function(t, options) {
+      return {
+        title: 'Obsidian Link',
+        icon: './icon.svg',
+        content: {
+          type: 'iframe',
+          url: t.signUrl('./card-back-section.html'),
+          height: 200
+        }
+      };
+    };
+
+    TrelloPowerUp.initialize(powerUpConfig);
+  </script>
+</body>
+</html>
+

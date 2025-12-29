@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Obsidian Link</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: transparent;
+    }
+    .obsidian-link-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .obsidian-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .obsidian-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: #7c3aed;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .obsidian-link:hover {
+      background: #6d28d9;
+    }
+    .obsidian-link:active {
+      background: #5b21b6;
+    }
+    .link-text {
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="obsidian-link-container">
+    <a id="obsidianLink" class="obsidian-link" href="#" target="_blank">
+      <svg class="obsidian-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span class="link-text" id="linkText">Open in Obsidian</span>
+    </a>
+  </div>
+
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script>
+    var t = TrelloPowerUp.iframe();
+
+    // Get the URL and name from query parameters
+    var urlParams = new URLSearchParams(window.location.search);
+    var obsidianUrl = urlParams.get('url') || '';
+    var attachmentName = urlParams.get('name') || 'Obsidian Note';
+
+    // Set up the link
+    var linkElement = document.getElementById('obsidianLink');
+    var linkTextElement = document.getElementById('linkText');
+
+    // If URL not in params, try to get from Trello context
+    if (!obsidianUrl) {
+      t.getContext().then(function(context) {
+        // Try to get attachment URL from context if available
+        if (context.attachment && context.attachment.url) {
+          obsidianUrl = context.attachment.url;
+          if (context.attachment.name) {
+            attachmentName = context.attachment.name;
+          }
+          setupLink();
+        }
+      });
+    } else {
+      setupLink();
+    }
+
+    function setupLink() {
+      if (obsidianUrl && obsidianUrl.startsWith('obsidian://')) {
+        linkElement.href = obsidianUrl;
+        linkTextElement.textContent = attachmentName || 'Open in Obsidian';
+
+        // Handle click to open Obsidian
+        linkElement.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Open the obsidian:// URL which will trigger the OS to open Obsidian
+          window.location.href = obsidianUrl;
+        });
+      } else {
+        linkTextElement.textContent = 'Invalid Obsidian URL';
+        linkElement.style.opacity = '0.5';
+        linkElement.style.pointerEvents = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
+

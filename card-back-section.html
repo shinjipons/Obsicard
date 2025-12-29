@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Obsidian Link Paste</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: transparent;
+    }
+    .paste-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .paste-input-container {
+      position: relative;
+    }
+    .paste-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: monospace;
+      background: #f9f9f9;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .paste-input:focus {
+      outline: none;
+      border-color: #7c3aed;
+      background: white;
+    }
+    .paste-input::placeholder {
+      color: #999;
+    }
+    .paste-hint {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .obsidian-link-container {
+      margin-top: 8px;
+      padding: 12px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      display: none;
+    }
+    .obsidian-link-container.show {
+      display: block;
+    }
+    .obsidian-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: #7c3aed;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .obsidian-link:hover {
+      background: #6d28d9;
+    }
+    .obsidian-link:active {
+      background: #5b21b6;
+    }
+    .link-text {
+      margin-left: 8px;
+    }
+    .obsidian-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    .clear-button {
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #666;
+    }
+    .clear-button:hover {
+      background: #d0d0d0;
+    }
+  </style>
+</head>
+<body>
+  <div class="paste-container">
+    <div class="paste-input-container">
+      <input
+        type="text"
+        id="pasteInput"
+        class="paste-input"
+        placeholder="Paste Obsidian URL here (Cmd+V or Ctrl+V)"
+        autocomplete="off"
+      />
+      <div class="paste-hint">Paste an obsidian:// URL and it will appear as a clickable link below</div>
+    </div>
+
+    <div id="linkContainer" class="obsidian-link-container">
+      <a id="obsidianLink" class="obsidian-link" href="#" target="_blank">
+        <svg class="obsidian-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+        <span class="link-text" id="linkText">Open in Obsidian</span>
+      </a>
+      <div>
+        <button class="clear-button" id="clearButton">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://p.trellocdn.com/power-up.min.js"></script>
+  <script>
+    var t = TrelloPowerUp.iframe();
+    var pasteInput = document.getElementById('pasteInput');
+    var linkContainer = document.getElementById('linkContainer');
+    var obsidianLink = document.getElementById('obsidianLink');
+    var linkText = document.getElementById('linkText');
+    var clearButton = document.getElementById('clearButton');
+    var currentObsidianUrl = '';
+
+    // Function to check if URL is an Obsidian URL
+    function isObsidianUrl(url) {
+      return url && url.trim().startsWith('obsidian://');
+    }
+
+    // Function to extract Obsidian URL from pasted text
+    function extractObsidianUrl(text) {
+      // Check if the entire text is an Obsidian URL
+      var trimmed = text.trim();
+      if (isObsidianUrl(trimmed)) {
+        return trimmed;
+      }
+
+      // Check if there's an Obsidian URL in the text
+      var obsidianUrlPattern = /obsidian:\/\/[^\s]+/g;
+      var matches = trimmed.match(obsidianUrlPattern);
+      if (matches && matches.length > 0) {
+        return matches[0];
+      }
+
+      return null;
+    }
+
+    // Function to display the Obsidian link
+    function showObsidianLink(url) {
+      currentObsidianUrl = url;
+      obsidianLink.href = url;
+
+      // Try to extract a note name from the URL
+      var noteName = 'Obsidian Note';
+      try {
+        var urlObj = new URL(url);
+        var fileParam = urlObj.searchParams.get('file');
+        if (fileParam) {
+          // Decode and get the filename
+          noteName = decodeURIComponent(fileParam).split('/').pop() || 'Obsidian Note';
+        }
+      } catch (e) {
+        // If URL parsing fails, use default name
+      }
+
+      linkText.textContent = 'Open: ' + noteName;
+      linkContainer.classList.add('show');
+    }
+
+    // Function to hide the Obsidian link
+    function hideObsidianLink() {
+      linkContainer.classList.remove('show');
+      currentObsidianUrl = '';
+      pasteInput.value = '';
+    }
+
+    // Handle paste event
+    pasteInput.addEventListener('paste', function(e) {
+      // Small delay to let paste complete
+      setTimeout(function() {
+        var pastedText = pasteInput.value;
+        var obsidianUrl = extractObsidianUrl(pastedText);
+
+        if (obsidianUrl) {
+          showObsidianLink(obsidianUrl);
+          // Clear the input after showing the link
+          pasteInput.value = '';
+        } else {
+          hideObsidianLink();
+        }
+      }, 10);
+    });
+
+    // Handle input changes (for typing or manual paste)
+    pasteInput.addEventListener('input', function(e) {
+      var text = pasteInput.value;
+      var obsidianUrl = extractObsidianUrl(text);
+
+      if (obsidianUrl) {
+        showObsidianLink(obsidianUrl);
+      } else {
+        hideObsidianLink();
+      }
+    });
+
+    // Handle click on Obsidian link
+    obsidianLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (currentObsidianUrl) {
+        // Open the obsidian:// URL which will trigger the OS to open Obsidian
+        window.location.href = currentObsidianUrl;
+      }
+    });
+
+    // Handle clear button
+    clearButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      hideObsidianLink();
+      pasteInput.focus();
+    });
+
+    // Focus the input when the section loads
+    pasteInput.focus();
+
+    // Listen for keyboard shortcuts (Cmd+V / Ctrl+V) - though paste event handles this
+    document.addEventListener('keydown', function(e) {
+      // Cmd+V (Mac) or Ctrl+V (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+        // The paste event will handle it, but we can ensure focus
+        if (document.activeElement !== pasteInput) {
+          pasteInput.focus();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
+

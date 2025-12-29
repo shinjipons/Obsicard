@@ -1,0 +1,13 @@
+{
+  "name": "Obsidian Link",
+  "details": "Display Obsidian note URLs as clickable links that open in Obsidian",
+  "icon": {
+    "url": "./icon.svg"
+  },
+  "author": "Your Name",
+  "capabilities": [
+    "attachment-sections",
+    "card-back-section"
+  ]
+}
+

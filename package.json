@@ -1,0 +1,25 @@
+{
+  "name": "obsicard-trello-powerup",
+  "version": "1.0.0",
+  "description": "Trello Power-Up to display Obsidian note URLs as clickable links",
+  "main": "index.html",
+  "scripts": {
+    "start": "echo 'Host this Power-Up on a web server with HTTPS. Use a tool like ngrok for local testing.'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "trello",
+    "power-up",
+    "obsidian",
+    "integration"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}
